@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Juanito's Journey to Exactas</title>
+<title>Juanito's Journey to Exactas: Platformer Edition</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -48,14 +48,7 @@
     inset: 0;
     pointer-events: none;
     z-index: 50;
-    background:
-      repeating-linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.0) 0px,
-        rgba(0,0,0,0.0) 2px,
-        rgba(0,0,0,0.18) 3px,
-        rgba(0,0,0,0.0) 4px
-      );
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.0) 0px, rgba(0,0,0,0.0) 2px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.0) 4px);
     mix-blend-mode: multiply;
   }
   body::after {
@@ -79,7 +72,7 @@
 
   .terminal {
     width: 100%;
-    max-width: 720px;
+    max-width: 840px;
     background: var(--panel-solid);
     border: 1px solid var(--line);
     border-radius: 10px;
@@ -96,46 +89,84 @@
     border-bottom: 1px solid var(--line);
   }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: #2a3530; }
-  .titlebar .path {
-    margin-left: 8px;
-    font-size: 12px;
-    color: var(--text-dim);
-    letter-spacing: 0.02em;
-  }
+  .titlebar .path { margin-left: 8px; font-size: 12px; color: var(--text-dim); letter-spacing: 0.02em; }
 
   .screen {
-    padding: 28px 28px 32px;
+    padding: 20px;
+    position: relative;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .game-title {
     font-family: var(--pixel);
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.8;
     color: var(--green);
     text-shadow: 0 0 12px rgba(74,222,128,0.35);
     margin: 0 0 6px;
+    text-align: center;
   }
   .subtitle {
     color: var(--text-dim);
-    font-size: 13px;
-    margin: 0 0 22px;
+    font-size: 12px;
+    margin: 0 0 20px;
     letter-spacing: 0.02em;
+    text-align: center;
   }
 
-  /* progress */
+  /* Canvas */
+  #gameCanvas {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    aspect-ratio: 2/1;
+    background: #081009;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    image-rendering: pixelated;
+    display: none;
+  }
+  #gameCanvas.active { display: block; }
+
+  .controls-hint {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    display: none;
+  }
+  .controls-hint.active { display: block; }
+  .key {
+    display: inline-block;
+    border: 1px solid var(--green-dim);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: var(--green);
+    font-size: 10px;
+    margin: 0 2px;
+  }
+
+  /* Quiz Overlay */
+  #quizOverlay {
+    display: none;
+    width: 100%;
+    max-width: 800px;
+    flex-direction: column;
+  }
+  #quizOverlay.active { display: flex; }
+
   .progress-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
     font-size: 12px;
     color: var(--text-dim);
   }
-  .progress-bar {
-    font-size: 14px;
-    letter-spacing: 2px;
-    color: var(--green-dim);
-  }
+  .progress-bar { font-size: 14px; letter-spacing: 2px; color: var(--green-dim); }
   .progress-bar .filled { color: var(--green); }
 
   .subject-tag {
@@ -152,32 +183,18 @@
   .subject-tag.chem { border-color: #c98bf0; color: #c98bf0; }
   .subject-tag.phys { border-color: #66b8f2; color: #66b8f2; }
 
-  pre.ascii {
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.25;
-    color: var(--green-dim);
-    background: #081009;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 14px 12px;
-    overflow-x: auto;
-    margin: 0 0 18px;
-    text-shadow: 0 0 6px rgba(74,222,128,0.15);
-  }
-
   .story {
-    font-size: 14.5px;
-    line-height: 1.65;
+    font-size: 14px;
+    line-height: 1.6;
     color: var(--text);
-    margin: 0 0 20px;
+    margin: 0 0 16px;
     white-space: pre-line;
   }
 
   .question {
-    font-size: 14.5px;
+    font-size: 14px;
     color: var(--amber);
-    margin: 0 0 16px;
+    margin: 0 0 14px;
     line-height: 1.5;
   }
   .question::before { content: "> "; color: var(--green); }
@@ -193,68 +210,43 @@
     border: 1px solid var(--line);
     color: var(--text);
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 13px;
     padding: 12px 14px;
     border-radius: 6px;
     cursor: pointer;
     transition: border-color .15s ease, background .15s ease, transform .1s ease;
   }
-  .opt:hover:not(:disabled) {
-    border-color: var(--green-dim);
-    background: #0e1a15;
-  }
-  .opt:focus-visible {
-    outline: 2px solid var(--green);
-    outline-offset: 2px;
-  }
+  .opt:hover:not(:disabled) { border-color: var(--green-dim); background: #0e1a15; }
+  .opt:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
   .opt:active:not(:disabled) { transform: translateY(1px); }
-  .opt .letter {
-    color: var(--green-dim);
-    margin-right: 10px;
-  }
+  .opt .letter { color: var(--green-dim); margin-right: 10px; }
   .opt:disabled { cursor: default; opacity: 0.6; }
-  .opt.correct {
-    border-color: var(--green);
-    background: rgba(74,222,128,0.08);
-    opacity: 1;
-  }
-  .opt.wrong {
-    border-color: var(--red);
-    background: rgba(244,104,94,0.08);
-    opacity: 1;
-  }
+  .opt.correct { border-color: var(--green); background: rgba(74,222,128,0.08); opacity: 1; }
+  .opt.wrong { border-color: var(--red); background: rgba(244,104,94,0.08); opacity: 1; }
 
   .feedback {
-    margin-top: 18px;
+    margin-top: 16px;
     padding: 14px 16px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.6;
     display: none;
   }
   .feedback.show { display: block; }
-  .feedback.good {
-    border: 1px solid var(--green-dim);
-    background: rgba(74,222,128,0.06);
-    color: var(--text);
-  }
+  .feedback.good { border: 1px solid var(--green-dim); background: rgba(74,222,128,0.06); color: var(--text); }
   .feedback.good .label { color: var(--green); font-weight: 600; }
-  .feedback.bad {
-    border: 1px solid var(--red);
-    background: rgba(244,104,94,0.07);
-    color: var(--text);
-  }
+  .feedback.bad { border: 1px solid var(--red); background: rgba(244,104,94,0.07); color: var(--text); }
   .feedback.bad .label { color: var(--red); font-weight: 600; }
 
   .actions {
-    margin-top: 20px;
+    margin-top: 18px;
     display: flex;
     gap: 10px;
     justify-content: flex-end;
   }
   .btn {
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 0.03em;
     padding: 10px 18px;
     border-radius: 6px;
@@ -271,9 +263,10 @@
 
   .end-title {
     font-family: var(--pixel);
-    font-size: 15px;
+    font-size: 14px;
     margin: 0 0 16px;
     line-height: 1.7;
+    text-align: center;
   }
   .end-title.good { color: var(--green); text-shadow: 0 0 12px rgba(74,222,128,0.4);}
   .end-title.bad  { color: var(--red);   text-shadow: 0 0 12px rgba(244,104,94,0.4);}
@@ -286,10 +279,36 @@
     letter-spacing: 0.02em;
   }
 
-  @media (max-width: 480px) {
-    .screen { padding: 20px 16px 26px; }
-    .game-title { font-size: 12px; }
-    pre.ascii { font-size: 10px; }
+  /* Intro Screen */
+  #introScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 800px;
+  }
+  #introScreen.hidden { display: none; }
+
+  pre.ascii {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.25;
+    color: var(--green-dim);
+    background: #081009;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 12px;
+    overflow-x: auto;
+    margin: 0 0 18px;
+    text-shadow: 0 0 6px rgba(74,222,128,0.15);
+    width: 100%;
+  }
+
+  @media (max-width: 600px) {
+    .screen { padding: 16px 12px; }
+    .game-title { font-size: 11px; }
+    pre.ascii { font-size: 9px; }
+    .opt { font-size: 12px; padding: 10px; }
   }
 </style>
 </head>
@@ -298,256 +317,421 @@
 <div class="terminal">
   <div class="titlebar">
     <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    <div class="path">campus_corridor.exe — 09:41 AM</div>
+    <div class="path">exactas_platformer.exe — 07:58 AM</div>
   </div>
-  <div class="screen" id="screen"></div>
+  
+  <div class="screen">
+    <!-- INTRO -->
+    <div id="introScreen">
+      <h1 class="game-title">JUANITO'S JOURNEY<br>TO EXACTAS</h1>
+      <p class="subtitle">a 5-level platformer adventure — math · physics · chemistry</p>
+      <pre class="ascii">        .-""""""-.
+       /  o    o  \      7:58 AM.
+      |     __     |      Juanito is late.
+      |    '  '    |      Exactas is far.
+       \   ----   /       The clock is not on his side.
+        '-.____.-'        
+         /|    |\
+        / |    | \
+          |    |
+         _|    |_
+        [________]</pre>
+      <p class="story" style="text-align:center; max-width: 600px;">
+        Five major obstacles stand between Juanito and the lecture hall. 
+        Use your keyboard to navigate the platforms. Reach the <span style="color:var(--amber)">amber door</span> at the end of each level, then solve the academic challenge to proceed.
+      </p>
+      <div class="actions">
+        <button class="btn" id="startBtn">&gt; Start the run</button>
+      </div>
+    </div>
+
+    <!-- GAME CANVAS -->
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div class="controls-hint" id="controlsHint">
+      <span class="key">←</span> <span class="key">→</span> Move &nbsp;|&nbsp; <span class="key">↑</span> or <span class="key">Space</span> Jump &nbsp;|&nbsp; Reach the <span style="color:var(--amber)">■</span> door
+    </div>
+
+    <!-- QUIZ OVERLAY -->
+    <div id="quizOverlay">
+      <div class="progress-row">
+        <span id="quizLevelText">LEVEL 1 / 5</span>
+        <span class="progress-bar" id="quizProgressBar">■ □ □ □ □</span>
+      </div>
+      <span class="subject-tag" id="quizSubjectTag">Math</span>
+      <p class="story" id="quizStory"></p>
+      <p class="question" id="quizQuestion"></p>
+      <div class="options" id="quizOptions"></div>
+      <div class="feedback" id="quizFeedback"></div>
+      <div class="actions" id="quizActions"></div>
+    </div>
+
+    <!-- END SCREEN -->
+    <div id="endScreen" style="display:none; width:100%; max-width:800px; flex-direction:column; align-items:center;">
+      <h2 class="end-title" id="endTitle"></h2>
+      <pre class="ascii" id="endAscii"></pre>
+      <p class="story" id="endStory" style="text-align:center; max-width:600px;"></p>
+      <div class="actions">
+        <button class="btn" id="endBtn">&gt; Play again</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
-
+  // --- GAME DATA (5 Levels) ---
   const LEVELS = [
     {
       subject: "math",
       subjectLabel: "Math",
-      ascii:
-`      _____________
-     |  MAIN GATE  |
-     |   [_][_][_] |
-     |   [_][_][_] |
-     |_____________|
-        |       |
-     ___|_______|___
-    /   KEYPAD LOCK  \\`,
-      story: "It is 7:58 in the morning. Juanito is running to the university gate. The exam info session starts at 8:00. This gate is the only way in. A keypad locks the door. A note on the wall says: \"Code = sum of the first three prime numbers.\"",
-      question: "What number should Juanito type?",
+      story: "The Courtyard. Jump across the gaps to reach the Main Gate keypad before 8:00 AM.",
+      question: "The gate code is the sum of the first three prime numbers. What is it?",
       options: ["8", "9", "10", "12"],
       correct: 2,
-      good: "Juanito thinks about it: 2 + 3 + 5 = 10. He types 10. The gate opens with a click. He still has two minutes before the session starts.",
-      bad: "Juanito types the wrong number. The keypad turns red and locks for ten minutes. Now Juanito is stuck outside, and he watches the clock move past 8:00 through the bars of the gate."
+      good: "2 + 3 + 5 = 10. Juanito types 10. The gate opens with a click!",
+      bad: "Wrong code. The keypad turns red and locks for ten minutes. Juanito is stuck outside.",
+      platforms: [
+        {x: 0, y: 350, w: 250, h: 50},
+        {x: 300, y: 300, w: 100, h: 20},
+        {x: 450, y: 250, w: 100, h: 20},
+        {x: 600, y: 350, w: 200, h: 50}
+      ],
+      hazards: [],
+      goal: {x: 720, y: 290, w: 40, h: 60},
+      start: {x: 50, y: 300}
     },
     {
       subject: "physics",
       subjectLabel: "Physics",
-      ascii:
-`   [ELEVATOR: OUT OF ORDER]
-        ___
-       | X |
-       |___|
-        | |
-     ___|_|___
-    STAIRWELL B
-     240 m to go`,
-      story: "The elevator is broken. Juanito must run 100 meters to reach the stairs. He has only 30 seconds before the doors close. He can run at 5 meters per second.",
-      question: "How many seconds does Juanito need to run 100 meters at 5 meters per second? Does he make it in 30 s?",
+      story: "The Stairwell. The elevator is broken. Climb the platforms quickly before the doors close!",
+      question: "Juanito must run 100 meters at 5 m/s. How many seconds does he need? Does he make it in 30s?",
       options: ["20 s — yes, he has time", "30 s — just in time", "35 s — too slow", "50 s — too slow"],
       correct: 0,
-      good: "Time = distance ÷ speed = 100 ÷ 5 = 20 seconds. Juanito still has 10 extra seconds. He runs to the stairs and reaches the door right before it closes.",
-      bad: "Juanito guesses wrong and thinks he is too slow, so he stops running. He arrives after the doors are already closed."
+      good: "Time = 100 ÷ 5 = 20 seconds. He reaches the top with 10 extra seconds to spare.",
+      bad: "He miscalculates, hesitates, and the doors close before he can reach the top.",
+      platforms: [
+        {x: 0, y: 350, w: 150, h: 50},
+        {x: 180, y: 290, w: 100, h: 20},
+        {x: 320, y: 230, w: 100, h: 20},
+        {x: 180, y: 170, w: 100, h: 20},
+        {x: 350, y: 110, w: 100, h: 20},
+        {x: 500, y: 170, w: 100, h: 20},
+        {x: 650, y: 230, w: 150, h: 20}
+      ],
+      hazards: [],
+      goal: {x: 720, y: 170, w: 40, h: 60},
+      start: {x: 40, y: 300}
     },
     {
       subject: "chemistry",
       subjectLabel: "Chemistry",
-      ascii:
-`   ~~~~ SPILL ~~~~
-   ░░░░░░░░░░░░░░░
-   ░░ [litmus] ░░░
-   ░░  strip:  ░░░
-   ░░   RED    ░░░
-   ░░░░░░░░░░░░░░░`,
-      story: "Near the chemistry room, a bottle has spilled clear liquid on the floor. A paper strip in the liquid turns bright red. Juanito needs to know if it is safe to walk through.",
+      story: "The Chemistry Lab. A clear liquid has spilled on the floor, turning litmus paper bright red. Avoid the red puddles!",
       question: "A red paper strip means the liquid is...",
       options: ["basic (pH 8–14)", "neutral (pH 7)", "not related to pH", "acidic (pH 0–6)"],
       correct: 3,
-      good: "Red means the liquid is acidic, around pH 0 to 6. That is not safe for his shoes. Juanito walks around the puddle, along the dry part of the floor, and keeps going.",
-      bad: "Juanito thinks the color does not matter and walks through the puddle. The acid damages his shoe, so he must stop at the nurse's office to rinse his foot. He loses all his extra time."
-    },
-    {
-      subject: "math",
-      subjectLabel: "Math",
-      ascii:
-`   [VENDING MACHINE]
-    ___________
-   |  $ 3.60   |
-   |  PAID $5  |
-   |  ERROR:   |
-   |  3/4 CHNG |
-   |___________|`,
-      story: "Juanito buys a coffee for $2. He pays with a $5 bill. A sign on the machine says: \"This machine gives only half of your change.\"",
-      question: "The full change is $3. How much money does the machine actually give Juanito?",
-      options: ["$3.00", "$1.50", "$2.00", "$1.00"],
-      correct: 1,
-      good: "Half of $3 is $1.50. Juanito takes the $1.50, does not argue with the machine, and keeps walking with his coffee.",
-      bad: "Juanito expects the full $3 and argues with the machine instead of walking away. He wastes time, and the clock keeps running."
+      good: "Red means acidic (pH 0-6). Juanito carefully jumps over the puddles and keeps going.",
+      bad: "He walks through the puddle. The acid damages his shoe, and he has to stop at the nurse's office.",
+      platforms: [
+        {x: 0, y: 350, w: 200, h: 50},
+        {x: 250, y: 350, w: 150, h: 50},
+        {x: 450, y: 350, w: 150, h: 50},
+        {x: 650, y: 350, w: 150, h: 50}
+      ],
+      hazards: [
+        {x: 200, y: 370, w: 50, h: 30},
+        {x: 400, y: 370, w: 50, h: 30},
+        {x: 600, y: 370, w: 50, h: 30}
+      ],
+      goal: {x: 720, y: 290, w: 40, h: 60},
+      start: {x: 40, y: 300}
     },
     {
       subject: "physics",
       subjectLabel: "Physics",
-      ascii:
-`   |==================|
-   |   FALLEN SHELF    |
-   |   mass = 50 kg    |
-   |===[BLOCKING]======|
-        corridor`,
-      story: "A shelf is blocking the hallway. It has a mass of 10 kg. Juanito must push it so it moves with an acceleration of 2 meters per second squared.",
-      question: "Using F = m × a, how much force does Juanito need to push the shelf?",
+      story: "The Hallway. A heavy shelf is blocking the path. Juanito must jump on top of it to cross.",
+      question: "The shelf has a mass of 10 kg. To move it with an acceleration of 2 m/s², how much force is needed? (F = m × a)",
       options: ["12 N", "5 N", "20 N", "200 N"],
       correct: 2,
-      good: "F = m × a = 10 × 2 = 20 N. Juanito pushes with the right amount of force. The shelf slides aside and opens a path for him.",
-      bad: "Juanito pushes too hard without thinking. The shelf tips over and blocks the hallway completely, and campus security comes to check the noise."
+      good: "F = 10 × 2 = 20 N. Juanito pushes with the right force, slides it aside, and crosses.",
+      bad: "He miscalculates, pushes awkwardly, and the shelf tips over, blocking the path completely.",
+      platforms: [
+        {x: 0, y: 350, w: 250, h: 50},
+        {x: 300, y: 280, w: 200, h: 70}, // The shelf
+        {x: 550, y: 350, w: 250, h: 50}
+      ],
+      hazards: [],
+      goal: {x: 720, y: 290, w: 40, h: 60},
+      start: {x: 40, y: 300}
     },
     {
       subject: "math",
       subjectLabel: "Math",
-      ascii:
-`   [SECURITY PANEL]
-    ___________
-   |  2x + 5   |
-   |    =17    |
-   |  x = ??   |
-   |___________|`,
-      story: "A locked door has a small screen with a math problem. Only the right answer will open the door.",
-      question: "Solve for x: 2x + 4 = 10.",
-      options: ["x = 3", "x = 4", "x = 2", "x = 5"],
-      correct: 0,
-      good: "2x + 4 = 10  →  2x = 6  →  x = 3. Juanito types \"3\" and the screen turns green. The door opens onto a shortcut he did not know about.",
-      bad: "Juanito guesses without solving the problem. The screen turns red and a timer starts counting down — time he does not have."
-    },
-    {
-      subject: "chemistry",
-      subjectLabel: "Chemistry",
-      ascii:
-`  LAB SPILL - AISLE 3
-  [ACID: 2 mol]
-  [BASE avail: NaHCO3]
-   fizz... fizz...`,
-      story: "In the lab, 3 moles of acid have spilled on the floor. Juanito has baking soda, which is a base. Acid and base react in a 1:1 ratio.",
-      question: "How many moles of base does Juanito need to stop the acid?",
-      options: ["6 mol", "1 mol", "1.5 mol", "3 mol"],
-      correct: 3,
-      good: "With a 1:1 ratio, 3 mol of acid needs 3 mol of base. Juanito adds the right amount of baking soda, and the spill stops fizzing.",
-      bad: "Juanito adds too little baking soda. The acid is still active, so he must go back and find another way to Exactas."
-    },
-    {
-      subject: "math",
-      subjectLabel: "Math",
-      ascii:
-`   [AIR DUCT ACCESS]
-    ___________
-   /  0.5 m   /|
-  /__________/ |
-  |          | / 0.4 m
-  |__________|/
-   min. area:
-   0.18 m² req.`,
-      story: "Juanito finds an open duct. It is 1 meter wide and 0.5 meters tall. A sign says the duct must be at least 0.3 square meters to be safe.",
-      question: "What is the area of the duct? Is it big enough?",
-      options: ["1.5 m² — yes, big enough", "0.5 m² — yes, big enough", "0.2 m² — too small", "5 m² — yes, big enough"],
-      correct: 1,
-      good: "Area = width × height = 1 × 0.5 = 0.5 m², which is bigger than 0.3 m². Juanito crawls through the duct with no problem and comes out the other side.",
-      bad: "Juanito does not check the size before he tries to crawl through. Halfway in, he gets stuck, and a maintenance worker has to help pull him out."
-    },
-    {
-      subject: "physics",
-      subjectLabel: "Physics",
-      ascii:
-`   [OLD FREIGHT LIFT]
-     counterweight:
-     bucket, 20 kg
-     drop height: 3 m
-        ||
-      __||__
-     |PULLEY|`,
-      story: "An old lift uses a falling weight to go up. The weight is 10 kg and falls 2 meters. Juanito wants to know how much energy this gives.",
-      question: "Using PE = m × g × h, with g ≈ 10 m/s², how much energy does the falling weight give?",
-      options: ["20 J", "100 J", "200 J", "2000 J"],
-      correct: 2,
-      good: "PE = m × g × h = 10 × 10 × 2 = 200 J. That is enough energy. Juanito releases the weight, and the lift rises smoothly with him on it.",
-      bad: "Juanito does not check the energy first. The lift is too weak and stalls halfway up. Juanito has to climb out and find another way."
-    },
-    {
-      subject: "math",
-      subjectLabel: "Math",
-      ascii:
-`   ___________________
-  |     E X A C T A S   |
-  |     _____________   |
-  |    | DOOR CODE:  |  |
-  |    | x²-5x+6 = 0 |  |
-  |    | take larger |  |
-  |    |   root      |  |
-  |    |_____________|  |
-  |___________________|`,
-      story: "Juanito reaches the big doors of the Exactas building. Through the glass he can see the room filling up. A screen shows one last math problem: the code is the larger value of x² − 5x + 6 = 0.",
-      question: "Solve x² − 5x + 6 = 0. What is the larger value of x?",
+      story: "The Exactas Building. The final climb. Reach the top door and solve the last equation to get in.",
+      question: "The door code is the larger root of: x² − 5x + 6 = 0",
       options: ["x = 3", "x = 2", "x = 1", "x = 6"],
       correct: 0,
-      good: "Factoring: x² − 5x + 6 = (x − 2)(x − 3) = 0, so x = 2 or x = 3. The larger value is 3. Juanito enters \"3\" and the doors open just as the proctor starts to speak.",
-      bad: "Juanito enters the wrong number. The doors stay shut. Through the glass, he watches the session start without him."
+      good: "Factoring: (x − 2)(x − 3) = 0. The larger root is 3. The doors open just as the proctor starts to speak!",
+      bad: "He enters the wrong number. The doors stay shut. He watches the session start without him through the glass.",
+      platforms: [
+        {x: 0, y: 350, w: 150, h: 50},
+        {x: 200, y: 290, w: 80, h: 20},
+        {x: 330, y: 230, w: 80, h: 20},
+        {x: 460, y: 170, w: 80, h: 20},
+        {x: 590, y: 110, w: 80, h: 20},
+        {x: 700, y: 110, w: 100, h: 20}
+      ],
+      hazards: [],
+      goal: {x: 740, y: 50, w: 40, h: 60},
+      start: {x: 40, y: 300}
     }
   ];
 
-  const screen = document.getElementById('screen');
-  let current = 0;
+  // --- DOM ELEMENTS ---
+  const introScreen = document.getElementById('introScreen');
+  const gameCanvas = document.getElementById('gameCanvas');
+  const controlsHint = document.getElementById('controlsHint');
+  const quizOverlay = document.getElementById('quizOverlay');
+  const endScreen = document.getElementById('endScreen');
+  const ctx = gameCanvas.getContext('2d');
 
-  function progressBar(levelIndex){
-    const total = LEVELS.length;
-    let bar = '';
-    for(let i=0;i<total;i++){
-      bar += i < levelIndex ? '<span class="filled">■</span>' : '□';
+  // --- GAME STATE ---
+  let currentLevel = 0;
+  let gameState = 'MENU'; // MENU, PLAYING, QUIZ, GAMEOVER, VICTORY
+  let animationId = null;
+
+  // Player physics
+  const player = {
+    x: 50, y: 300, w: 24, h: 36,
+    vx: 0, vy: 0,
+    speed: 4, jumpStrength: -9,
+    grounded: false
+  };
+  const gravity = 0.5;
+  const friction = 0.85;
+
+  // Input state
+  const keys = { left: false, right: false, up: false };
+
+  // --- INITIALIZATION ---
+  document.getElementById('startBtn').addEventListener('click', () => {
+    currentLevel = 0;
+    startLevel();
+  });
+
+  document.getElementById('endBtn').addEventListener('click', () => {
+    endScreen.style.display = 'none';
+    introScreen.classList.remove('hidden');
+    gameState = 'MENU';
+  });
+
+  // --- INPUT HANDLING ---
+  window.addEventListener('keydown', (e) => {
+    if (gameState !== 'PLAYING') return;
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w') {
+      if (!keys.up && player.grounded) {
+        player.vy = player.jumpStrength;
+        player.grounded = false;
+      }
+      keys.up = true;
     }
-    return bar;
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w') keys.up = false;
+  });
+
+  // --- GAME LOOP ---
+  function startLevel() {
+    introScreen.classList.add('hidden');
+    quizOverlay.classList.remove('active');
+    gameCanvas.classList.add('active');
+    controlsHint.classList.add('active');
+    
+    // Reset player
+    const lvl = LEVELS[currentLevel];
+    player.x = lvl.start.x;
+    player.y = lvl.start.y;
+    player.vx = 0;
+    player.vy = 0;
+    player.grounded = false;
+    
+    gameState = 'PLAYING';
+    if (animationId) cancelAnimationFrame(animationId);
+    gameLoop();
   }
 
-  function subjectClass(subject){
-    if(subject === 'chemistry') return 'chem';
-    if(subject === 'physics') return 'phys';
-    return '';
+  function gameLoop() {
+    if (gameState === 'PLAYING') {
+      update();
+      draw();
+      animationId = requestAnimationFrame(gameLoop);
+    }
   }
 
-  function renderIntro(){
-    screen.innerHTML = `
-      <h1 class="game-title">JUANITO'S JOURNEY<br>TO EXACTAS</h1>
-      <p class="subtitle">a 10-level campus adventure — math · physics · chemistry</p>
-      <pre class="ascii">        .-""""""-.
-       /  o    o  \\
-      |     __     |      7:57 AM.
-      |    '  '    |      Juanito is late.
-       \\   ----   /       Exactas is far.
-        '-.____.-'        The clock is not on his side.
-         /|    |\\
-        / |    | \\
-          |    |
-         _|    |_
-        [________]</pre>
-      <p class="story">Ten obstacles stand between Juanito and the Exactas lecture hall. Each one needs a number to solve it — some math, some physics, some chemistry. Answer correctly, and Juanito moves forward. Answer wrong, and the story ends there.</p>
-      <div class="actions">
-        <button class="btn" id="startBtn">&gt; Start the run</button>
-      </div>
-    `;
-    document.getElementById('startBtn').addEventListener('click', () => {
-      current = 0;
-      renderLevel();
-    });
+  function update() {
+    // Horizontal movement
+    if (keys.left) player.vx -= 1;
+    if (keys.right) player.vx += 1;
+    
+    player.vx *= friction;
+    player.x += player.vx;
+
+    // Clamp to canvas
+    if (player.x < 0) { player.x = 0; player.vx = 0; }
+    if (player.x + player.w > 800) { player.x = 800 - player.w; player.vx = 0; }
+
+    // Vertical movement (Gravity)
+    player.vy += gravity;
+    player.y += player.vy;
+    player.grounded = false;
+
+    const lvl = LEVELS[currentLevel];
+
+    // Platform collisions
+    for (let p of lvl.platforms) {
+      if (rectIntersect(player.x, player.y, player.w, player.h, p.x, p.y, p.w, p.h)) {
+        // Resolve collision
+        const overlapX = (player.w + p.w) / 2 - Math.abs((player.x + player.w/2) - (p.x + p.w/2));
+        const overlapY = (player.h + p.h) / 2 - Math.abs((player.y + player.h/2) - (p.y + p.h/2));
+
+        if (overlapX < overlapY) {
+          // Horizontal
+          if (player.x < p.x) player.x = p.x - player.w;
+          else player.x = p.x + p.w;
+          player.vx = 0;
+        } else {
+          // Vertical
+          if (player.y < p.y) {
+            player.y = p.y - player.h;
+            player.grounded = true;
+            player.vy = 0;
+          } else {
+            player.y = p.y + p.h;
+            player.vy = 0;
+          }
+        }
+      }
+    }
+
+    // Hazard collisions
+    for (let h of lvl.hazards) {
+      if (rectIntersect(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)) {
+        resetLevel();
+        return;
+      }
+    }
+
+    // Fall off screen
+    if (player.y > 450) {
+      resetLevel();
+      return;
+    }
+
+    // Goal collision
+    if (rectIntersect(player.x, player.y, player.w, player.h, lvl.goal.x, lvl.goal.y, lvl.goal.w, lvl.goal.h)) {
+      triggerQuiz();
+    }
   }
 
-  function renderLevel(){
-    const lvl = LEVELS[current];
-    screen.innerHTML = `
-      <div class="progress-row">
-        <span>LEVEL ${current+1} / ${LEVELS.length}</span>
-        <span class="progress-bar">${progressBar(current)}</span>
-      </div>
-      <span class="subject-tag ${subjectClass(lvl.subject)}">${lvl.subjectLabel}</span>
-      <pre class="ascii">${lvl.ascii}</pre>
-      <p class="story">${lvl.story}</p>
-      <p class="question">${lvl.question}</p>
-      <div class="options" id="options"></div>
-      <div class="feedback" id="feedback"></div>
-      <div class="actions" id="actions"></div>
-    `;
+  function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
+    return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
+  }
 
-    const optionsEl = document.getElementById('options');
+  function resetLevel() {
+    // Simple reset to start of level
+    const lvl = LEVELS[currentLevel];
+    player.x = lvl.start.x;
+    player.y = lvl.start.y;
+    player.vx = 0;
+    player.vy = 0;
+  }
+
+  function draw() {
+    const lvl = LEVELS[currentLevel];
+    
+    // Clear
+    ctx.fillStyle = '#081009';
+    ctx.fillRect(0, 0, 800, 400);
+
+    // Draw platforms
+    ctx.fillStyle = '#1f2e27';
+    ctx.strokeStyle = '#2f7a52';
+    ctx.lineWidth = 2;
+    for (let p of lvl.platforms) {
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.strokeRect(p.x, p.y, p.w, p.h);
+      // Add some "brick" detail
+      ctx.fillStyle = '#0f1613';
+      ctx.fillRect(p.x + 4, p.y + 4, p.w - 8, p.h - 8);
+      ctx.fillStyle = '#1f2e27';
+    }
+
+    // Draw hazards
+    ctx.fillStyle = '#f4685e';
+    ctx.strokeStyle = '#f4685e';
+    for (let h of lvl.hazards) {
+      ctx.fillRect(h.x, h.y, h.w, h.h);
+      // Acid bubble effect
+      ctx.fillStyle = '#081009';
+      ctx.fillRect(h.x + 5, h.y + 5, 8, 8);
+      ctx.fillRect(h.x + 25, h.y + 10, 6, 6);
+      ctx.fillStyle = '#f4685e';
+    }
+
+    // Draw goal (door)
+    ctx.fillStyle = '#f5c451';
+    ctx.fillRect(lvl.goal.x, lvl.goal.y, lvl.goal.w, lvl.goal.h);
+    ctx.strokeStyle = '#f5c451';
+    ctx.strokeRect(lvl.goal.x, lvl.goal.y, lvl.goal.w, lvl.goal.h);
+    // Door knob
+    ctx.fillStyle = '#081009';
+    ctx.beginPath();
+    ctx.arc(lvl.goal.x + 30, lvl.goal.y + 35, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw player (Juanito)
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    // Eyes
+    ctx.fillStyle = '#081009';
+    if (keys.right || (!keys.left && !keys.right)) {
+      ctx.fillRect(player.x + 14, player.y + 8, 4, 4);
+      ctx.fillRect(player.x + 6, player.y + 8, 4, 4);
+    } else {
+      ctx.fillRect(player.x + 4, player.y + 8, 4, 4);
+      ctx.fillRect(player.x + 12, player.y + 8, 4, 4);
+    }
+  }
+
+  // --- QUIZ LOGIC ---
+  function triggerQuiz() {
+    gameState = 'QUIZ';
+    cancelAnimationFrame(animationId);
+    
+    const lvl = LEVELS[currentLevel];
+    
+    // Populate quiz UI
+    document.getElementById('quizLevelText').textContent = `LEVEL ${currentLevel + 1} / ${LEVELS.length}`;
+    
+    let bar = '';
+    for(let i=0; i<LEVELS.length; i++){
+      bar += i <= currentLevel ? '<span class="filled">■</span>' : '□';
+    }
+    document.getElementById('quizProgressBar').innerHTML = bar;
+    
+    const tag = document.getElementById('quizSubjectTag');
+    tag.textContent = lvl.subjectLabel;
+    tag.className = 'subject-tag ' + (lvl.subject === 'chemistry' ? 'chem' : lvl.subject === 'physics' ? 'phys' : '');
+    
+    document.getElementById('quizStory').textContent = lvl.story;
+    document.getElementById('quizQuestion').textContent = lvl.question;
+    
+    const optionsEl = document.getElementById('quizOptions');
+    optionsEl.innerHTML = '';
     const letters = ['A','B','C','D'];
     lvl.options.forEach((optText, idx) => {
       const btn = document.createElement('button');
@@ -556,78 +740,81 @@
       btn.addEventListener('click', () => handleAnswer(idx));
       optionsEl.appendChild(btn);
     });
+    
+    document.getElementById('quizFeedback').className = 'feedback';
+    document.getElementById('quizFeedback').innerHTML = '';
+    document.getElementById('quizActions').innerHTML = '';
+    
+    gameCanvas.classList.remove('active');
+    controlsHint.classList.remove('active');
+    quizOverlay.classList.add('active');
   }
 
-  function handleAnswer(idx){
-    const lvl = LEVELS[current];
-    const optionButtons = document.querySelectorAll('#options .opt');
+  function handleAnswer(idx) {
+    const lvl = LEVELS[currentLevel];
+    const optionButtons = document.querySelectorAll('#quizOptions .opt');
     optionButtons.forEach(b => b.disabled = true);
 
     const isCorrect = idx === lvl.correct;
     optionButtons[idx].classList.add(isCorrect ? 'correct' : 'wrong');
-    if(!isCorrect){
+    if (!isCorrect) {
       optionButtons[lvl.correct].classList.add('correct');
     }
 
-    const feedback = document.getElementById('feedback');
-    const actions = document.getElementById('actions');
+    const feedback = document.getElementById('quizFeedback');
+    const actions = document.getElementById('quizActions');
 
-    if(isCorrect){
+    if (isCorrect) {
       feedback.className = 'feedback show good';
       feedback.innerHTML = `<span class="label">Correct.</span> ${lvl.good}`;
-      const isLast = current === LEVELS.length - 1;
-      actions.innerHTML = `<button class="btn" id="nextBtn">${isLast ? '&gt; Reach Exactas' : '&gt; Keep going'}</button>`;
+      const isLast = currentLevel === LEVELS.length - 1;
+      actions.innerHTML = `<button class="btn" id="nextBtn">${isLast ? '> Reach Exactas' : '> Keep going'}</button>`;
       document.getElementById('nextBtn').addEventListener('click', () => {
-        if(isLast){
-          renderGoodEnding();
+        if (isLast) {
+          renderVictory();
         } else {
-          current++;
-          renderLevel();
+          currentLevel++;
+          startLevel();
         }
       });
     } else {
       feedback.className = 'feedback show bad';
       feedback.innerHTML = `<span class="label">Wrong.</span> ${lvl.bad}`;
-      actions.innerHTML = `<button class="btn danger" id="endBtn">&gt; See how it ends</button>`;
-      document.getElementById('endBtn').addEventListener('click', () => {
-        renderBadEnding(lvl, current);
+      actions.innerHTML = `<button class="btn danger" id="endBtnQuiz">> See how it ends</button>`;
+      document.getElementById('endBtnQuiz').addEventListener('click', () => {
+        renderGameOver(lvl);
       });
     }
   }
 
-  function renderBadEnding(lvl, levelIndex){
-    screen.innerHTML = `
-      <div class="progress-row">
-        <span>LEVEL ${levelIndex+1} / ${LEVELS.length}</span>
-        <span class="progress-bar">${progressBar(levelIndex)}</span>
-      </div>
-      <h2 class="end-title bad">GAME OVER</h2>
-      <pre class="ascii">   .-""""""-.
+  function renderGameOver(lvl) {
+    quizOverlay.classList.remove('active');
+    endScreen.style.display = 'flex';
+    
+    document.getElementById('endTitle').textContent = 'GAME OVER';
+    document.getElementById('endTitle').className = 'end-title bad';
+    document.getElementById('endAscii').textContent = 
+`   .-""""""-.
   /  x    x  \\
  |     __     |     Session started
  |    '  '    |     without him.
   \\   ----   /
    '-.____.-'
     /|    |\\
-   / |    | \\</pre>
-      <p class="story">${lvl.bad}</p>
-      <p class="story">Juanito's journey to Exactas ends here — for today, at least.</p>
-      <div class="actions">
-        <button class="btn" id="retryBtn">&gt; Try again</button>
-      </div>
-      <p class="footer-note">Bad ending reached at Level ${levelIndex+1}: ${lvl.subjectLabel}</p>
-    `;
-    document.getElementById('retryBtn').addEventListener('click', renderIntro);
+   / |    | \\`;
+    document.getElementById('endStory').textContent = `${lvl.bad}\n\nJuanito's journey to Exactas ends here — for today, at least. He failed at Level ${currentLevel + 1} (${lvl.subjectLabel}).`;
   }
 
-  function renderGoodEnding(){
-    screen.innerHTML = `
-      <div class="progress-row">
-        <span>LEVEL ${LEVELS.length} / ${LEVELS.length}</span>
-        <span class="progress-bar">${progressBar(LEVELS.length)}</span>
-      </div>
-      <h2 class="end-title good">JUANITO MADE IT</h2>
-      <pre class="ascii">   ___________________
+  function renderVictory() {
+    quizOverlay.classList.remove('active');
+    gameCanvas.classList.remove('active');
+    controlsHint.classList.remove('active');
+    endScreen.style.display = 'flex';
+    
+    document.getElementById('endTitle').textContent = 'JUANITO MADE IT';
+    document.getElementById('endTitle').className = 'end-title good';
+    document.getElementById('endAscii').textContent = 
+`   ___________________
   |     E X A C T A S   |
   |    ______________   |
   |   |   welcome    |  |
@@ -636,17 +823,13 @@
   |___________________|
         \\o/
          |      right on time.
-        / \\</pre>
-      <p class="story">The doors close behind him. Juanito sits down in the last open seat just as the proctor says "Good morning, everyone." He is out of breath, but nobody notices.</p>
-      <p class="story">Ten obstacles, ten right answers: a locked gate, a race against time, a spill to avoid, tricky change, a shelf to push, a coded door, an acid to neutralize, a duct to measure, a lift to power, and one final equation. Math, physics, and chemistry got him here — not luck.</p>
-      <div class="actions">
-        <button class="btn" id="playAgainBtn">&gt; Play again</button>
-      </div>
-    `;
-    document.getElementById('playAgainBtn').addEventListener('click', renderIntro);
+        / \\`;
+    document.getElementById('endStory').textContent = 
+`The doors close behind him. Juanito sits down in the last open seat just as the proctor says "Good morning, everyone." 
+
+Five obstacles, five right answers: a courtyard gap, a stairwell climb, an acid spill, a heavy shelf, and one final equation. Platforming skills and academic knowledge got him here — not luck.`;
   }
 
-  renderIntro();
 })();
 </script>
 
